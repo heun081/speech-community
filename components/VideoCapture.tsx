@@ -1,26 +1,26 @@
+import { storage } from "@/lib/firebaseConfig";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { useRef } from "react";
 import {
-  CameraView,
-  CameraType,
-  useCameraPermissions,
-  Camera,
-  CameraCapturedPicture,
-} from "expo-camera";
-import { useRef, useState } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+  Button,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function App() {
-  const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
 
   const cameraViewRef = useRef<CameraView | null>(null);
 
   if (!permission) {
-    // Camera permissions are still loading.
     return <View />;
   }
 
   if (!permission.granted) {
-    // Camera permissions are not granted yet.
     return (
       <View style={styles.container}>
         <Text style={styles.message}>
@@ -31,16 +31,15 @@ export default function App() {
     );
   }
 
-  function toggleCameraFacing() {
-    setFacing((current) => (current === "back" ? "front" : "back"));
-  }
-
   async function start() {
     console.log("started");
 
     try {
-      const a = await cameraViewRef.current?.recordAsync({ maxDuration: 5 });
-      console.log(a);
+      const data = await cameraViewRef.current?.recordAsync({ maxDuration: 5 });
+
+      console.log(data);
+
+      uploadVideo(data?.uri);
     } catch (err) {
       console.error(err);
     }
@@ -50,6 +49,46 @@ export default function App() {
     cameraViewRef.current?.stopRecording();
     console.log("stopped");
   }
+
+  const uploadVideo = async (videoUri: string) => {
+    const extension = Platform.OS === "ios" ? "mov" : "mp4";
+
+    if (!videoUri) return;
+
+    try {
+      // Firebase Storage에 저장할 파일 경로 설정
+      // iOS 확장자: .mov
+      // Android 확장자: .mp4
+
+      const storageRef = ref(storage, `videos/${Date.now()}.${extension}`);
+      const blob = await (await fetch(videoUri)).blob();
+
+      // Firebase Storage에 파일 업로드
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+
+      // 업로드 진행 상태 확인
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`Upload is ${progress}% done`);
+        },
+        (error) => {
+          console.error("Upload failed: ", error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+          console.log("File available at", downloadURL);
+
+          return downloadURL; // 업로드 완료 후 다운로드 URL 반환
+        }
+      );
+    } catch (error) {
+      console.error("VideoCapture.tsx: ", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
