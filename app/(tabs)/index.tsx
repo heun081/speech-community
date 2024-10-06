@@ -1,5 +1,6 @@
-import { Image, StyleSheet, Platform } from "react-native";
+import { Image, Platform, StyleSheet } from "react-native";
 
+import HapticsExample from "@/components/HapticsExample";
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -7,6 +8,7 @@ import { ThemedView } from "@/components/ThemedView";
 import VideoCapture from "@/components/VideoCapture";
 
 export default function HomeScreen() {
+  // return <HapticsExample />;
   return <VideoCapture />;
   return (
     <ParallaxScrollView

@@ -27,7 +27,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded && !authLoading) {
       if (!user) {
-        router.replace("sign-up");
+        router.replace("/sign-up");
       } else {
         router.replace("/sign-in");
       }

@@ -20,7 +20,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-const initFirebase = () => {
+const initFirebaseAuth = () => {
   let app = null;
 
   if (getApps().length === 0) {
@@ -38,7 +38,7 @@ const initFirebase = () => {
   }
 };
 
-initFirebase();
+initFirebaseAuth();
 
 const auth = getAuth(app);
 const db = getFirestore(app);

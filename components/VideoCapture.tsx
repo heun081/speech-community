@@ -1,8 +1,10 @@
 import { storage } from "@/lib/firebaseConfig";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { router } from "expo-router";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useRef } from "react";
 import {
+  Alert,
   Button,
   Platform,
   StyleSheet,
@@ -10,8 +12,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth } from "../hooks/useAuth";
 
-export default function App() {
+export default function VideoCapture() {
+  const { user } = useAuth();
+
   const [permission, requestPermission] = useCameraPermissions();
 
   const cameraViewRef = useRef<CameraView | null>(null);
@@ -32,22 +37,30 @@ export default function App() {
   }
 
   async function start() {
-    console.log("started");
+    Alert.alert("", "30초 동안 동영상 촬영을 시작합니다.", [
+      {
+        text: "시작",
+        onPress: async () => {
+          try {
+            const data = await cameraViewRef.current?.recordAsync({
+              maxDuration: 30,
+            });
 
-    try {
-      const data = await cameraViewRef.current?.recordAsync({ maxDuration: 5 });
+            console.log(data);
 
-      console.log(data);
-
-      uploadVideo(data?.uri);
-    } catch (err) {
-      console.error(err);
-    }
+            uploadVideo(data?.uri);
+          } catch (err) {
+            console.error(err);
+          }
+        },
+      },
+    ]);
   }
 
   async function stop() {
     cameraViewRef.current?.stopRecording();
-    console.log("stopped");
+
+    Alert.alert("완료", "촬영이 완료 되었습니다. 잠시만 기다려 주세요.");
   }
 
   const uploadVideo = async (videoUri: string) => {
@@ -60,7 +73,10 @@ export default function App() {
       // iOS 확장자: .mov
       // Android 확장자: .mp4
 
-      const storageRef = ref(storage, `videos/${Date.now()}.${extension}`);
+      const storageRef = ref(
+        storage,
+        `videos/${user?.uid}/${Date.now()}.${extension}`
+      );
       const blob = await (await fetch(videoUri)).blob();
 
       // Firebase Storage에 파일 업로드
@@ -81,6 +97,20 @@ export default function App() {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
           console.log("File available at", downloadURL);
+
+          Alert.alert("완료", "업로드가 완료 되었습니다.", [
+            {
+              text: "저장 페이지로 이동",
+              onPress: () => {
+                router.push({
+                  pathname: "/video-title",
+                  params: { videoUri: downloadURL },
+                });
+              },
+            },
+          ]);
+
+          console.log(user?.uid);
 
           return downloadURL; // 업로드 완료 후 다운로드 URL 반환
         }
