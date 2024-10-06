@@ -6,10 +6,11 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import VideoCapture from "@/components/VideoCapture";
+import VideoListScreen from "@/components/VideoListScreen";
 
 export default function HomeScreen() {
-  // return <HapticsExample />;
-  return <VideoCapture />;
+  return <VideoListScreen />;
+  // return <VideoCapture />;
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}

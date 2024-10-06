@@ -1,8 +1,13 @@
+import { useAuth } from "@/hooks/useAuth";
 import { storage } from "@/lib/firebaseConfig";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import {
+  CameraView,
+  useCameraPermissions,
+  useMicrophonePermissions,
+} from "expo-camera";
 import { router } from "expo-router";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   Alert,
   Button,
@@ -12,26 +17,39 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth } from "../hooks/useAuth";
 
 export default function VideoCapture() {
   const { user } = useAuth();
 
-  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [microphonePermission, requestMicrophonePermission] =
+    useMicrophonePermissions();
 
   const cameraViewRef = useRef<CameraView | null>(null);
 
-  if (!permission) {
+  // 초기 권한 요청
+  useEffect(() => {
+    requestMicrophonePermission();
+  }, []);
+
+  console.log("cameraPermission" + cameraPermission?.granted);
+  console.log("microphonePermission" + microphonePermission?.granted);
+
+  if (!cameraPermission || microphonePermission === null) {
     return <View />;
   }
 
-  if (!permission.granted) {
+  if (!cameraPermission.granted || !microphonePermission.granted) {
     return (
       <View style={styles.container}>
         <Text style={styles.message}>
-          We need your permission to show the camera
+          카메라 및 오디오 녹음 권한이 필요합니다.
         </Text>
-        <Button onPress={requestPermission} title="grant permission" />
+        <Button onPress={requestCameraPermission} title="카메라 권한 요청" />
+        <Button
+          onPress={requestMicrophonePermission}
+          title="오디오 권한 요청"
+        />
       </View>
     );
   }
@@ -42,8 +60,9 @@ export default function VideoCapture() {
         text: "시작",
         onPress: async () => {
           try {
+            console.log(cameraViewRef.current);
             const data = await cameraViewRef.current?.recordAsync({
-              maxDuration: 30,
+              maxDuration: Platform.OS === "android" ? 3000000 : 30,
             });
 
             console.log(data);
@@ -69,10 +88,6 @@ export default function VideoCapture() {
     if (!videoUri) return;
 
     try {
-      // Firebase Storage에 저장할 파일 경로 설정
-      // iOS 확장자: .mov
-      // Android 확장자: .mp4
-
       const storageRef = ref(
         storage,
         `videos/${user?.uid}/${Date.now()}.${extension}`
@@ -112,7 +127,7 @@ export default function VideoCapture() {
 
           console.log(user?.uid);
 
-          return downloadURL; // 업로드 완료 후 다운로드 URL 반환
+          return downloadURL;
         }
       );
     } catch (error) {
@@ -126,7 +141,6 @@ export default function VideoCapture() {
         style={styles.camera}
         facing={"front"}
         videoQuality="1080p"
-        flash="on"
         ref={cameraViewRef}
         mode="video"
       >
