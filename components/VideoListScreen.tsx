@@ -1,26 +1,15 @@
-import { db, storage } from "@/lib/firebaseConfig";
-import { Video } from "expo-av";
+import { VideoCard } from "@/components/VideoCard";
+import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
-import { getDownloadURL, ref } from "firebase/storage";
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, Text } from "react-native";
-import { Button, Card } from "react-native-paper";
+import React, { useEffect, useState } from "react";
+import { FlatList, StyleSheet, Text } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VideoList() {
   const [videos, setVideos] = useState<Array<any>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
-  const videoRef = useRef<Video | null>(null);
-
-  const downloadNy = async (url: string) => {
-    console.log("doc.videoUrl: " + url);
-    const videoRef = ref(storage, url);
-    const downloadURL = await getDownloadURL(videoRef);
-
-    return downloadURL;
-  };
 
   const fetchVideos = async () => {
     try {
@@ -42,7 +31,7 @@ export default function VideoList() {
   };
 
   useEffect(() => {
-    fetchVideos(); // 컴포넌트 마운트 시 데이터 가져오기
+    fetchVideos();
   }, []);
 
   if (loading) {
@@ -61,48 +50,11 @@ export default function VideoList() {
     );
   }
 
-  const renderItem = ({ item }: { item: any }) => {
-    return (
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.subtitle}>UID: {item.creatorId}</Text>
-          {/* 동영상 렌더링 */}
-          <Video
-            ref={videoRef}
-            source={{
-              uri: "https://firebasestorage.googleapis.com/v0/b/video-upload-8a7ee.appspot.com/o/videos%2Frof0t9NZuffRgEnptgp0JKWSEal2%2F1728196210601.mp4?alt=media&token=01c90595-8777-42bc-b6af-454cc121b4c3",
-            }} // Firestore에서 가져온 videoUrl 사용
-            rate={1.0}
-            volume={1.0}
-            isMuted={false}
-            shouldPlay
-            resizeMode="cover"
-            style={{ width: "100%", height: 600 }} // 원하는 크기로 조정
-          />
-          <Button
-            onPress={async () => {
-              if (videoRef.current) {
-                await videoRef.current?.playAsync();
-                await videoRef.current?.replayAsync();
-                console.log("good?");
-              } else {
-                console.log("bad");
-              }
-            }}
-          >
-            실행
-          </Button>
-        </Card.Content>
-      </Card>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.listContainer}>
       <FlatList
         data={videos}
-        renderItem={renderItem}
+        renderItem={({ item }) => <VideoCard item={item} />}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
       />
@@ -114,17 +66,6 @@ const styles = StyleSheet.create({
   listContainer: {
     flex: 1,
     padding: 20,
-  },
-  card: {
-    marginBottom: 15,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
   },
   loadingContainer: {
     flex: 1,

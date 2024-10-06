@@ -35,6 +35,10 @@ const initFirebaseAuth = () => {
     }
   } else {
     app = getApp();
+
+    initializeAuth(app, {
+      persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+    });
   }
 };
 
