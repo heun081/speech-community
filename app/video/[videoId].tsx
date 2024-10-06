@@ -1,25 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Card } from "react-native-paper";
+import { db } from "@/lib/firebaseConfig";
+import { useLocalSearchParams } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig"; // Firebase 설정 가져오기
-import { useLocalSearchParams } from "expo-router"; // Expo Router에서 전달된 params 사용
-import { getVideoUrl } from "@/lib/getVideoUrl";
+import React, { useEffect, useState } from "react";
+import { SafeAreaView, ScrollView, StyleSheet, Text } from "react-native";
+import { Card } from "react-native-paper";
 
 export default function RatingDetail() {
-  const { videoId } = useLocalSearchParams(); // videoId를 받아옴
+  const { videoId } = useLocalSearchParams();
+
   const [ratings, setRatings] = useState<Array<any>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchRatings = async () => {
     try {
-      const videoDocRef = doc(db, "videos", String(videoId)); // videoId를 문자열로 변환
+      const videoDocRef = doc(db, "videos", String(videoId));
       const videoDocSnapshot = await getDoc(videoDocRef);
 
       if (videoDocSnapshot.exists()) {
         const videoData = videoDocSnapshot.data();
-        setRatings(videoData.ratings || []); // ratings 필드를 가져옴
+
+        setRatings(videoData.ratings || []);
       } else {
         setError("해당 비디오를 찾을 수 없습니다.");
       }
@@ -32,9 +33,6 @@ export default function RatingDetail() {
 
   useEffect(() => {
     fetchRatings(); // videoId가 변경될 때마다 데이터 로드
-    getVideoUrl("").then((D) => {
-      console.log(d);
-    });
   }, [videoId]);
 
   if (loading) {

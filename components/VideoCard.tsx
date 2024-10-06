@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Text, StyleSheet } from "react-native";
-import { Video } from "expo-av";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
-import { Rating } from "react-native-ratings";
-import { db } from "@/lib/firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
+import { db } from "@/lib/firebaseConfig";
+import { getVideoUrl } from "@/lib/getVideoUrl";
+import { Video } from "expo-av";
+import { useRouter, useNavigation } from "expo-router";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { Button, Card } from "react-native-paper";
-import { useRouter } from "expo-router"; // Expo Router 사용
+import { Rating } from "react-native-ratings";
 
 interface VideoCardProps {
   item: any;
@@ -15,12 +16,17 @@ interface VideoCardProps {
 export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
   const { user } = useAuth();
   const router = useRouter(); // 라우터 훅 사용
+  const navigation = useNavigation();
+
+  const isFocused = navigation.isFocused();
 
   const [voiceSpeedRating, setVoiceSpeedRating] = useState<number>(3);
   const [postureRating, setPostureRating] = useState<number>(3);
   const [endingEvaluationRating, setEndingEvaluationRating] =
     useState<number>(3);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [loadingVideo, setLoadingVideo] = useState<boolean>(true);
 
   const videoRef = useRef<Video | null>(null);
 
@@ -34,13 +40,11 @@ export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
         const videoData = videoDocSnapshot.data();
         const currentRatings = videoData.ratings || [];
 
-        // 사용자가 이미 평가한 항목이 있는지 확인
         const existingRating = currentRatings.find(
           (rating: any) => rating.userId === user.uid
         );
 
         if (existingRating) {
-          // 기존 평가 값으로 상태 업데이트
           setVoiceSpeedRating(existingRating.voiceSpeed);
           setPostureRating(existingRating.posture);
           setEndingEvaluationRating(existingRating.endingEvaluation);
@@ -49,13 +53,41 @@ export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
     } catch (error) {
       console.error("기존 평가 로딩 중 오류 발생:", error);
     } finally {
-      setIsLoading(false); // 로딩 완료
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchExistingRating(item.id); // 컴포넌트 마운트 시 기존 평가 로드
-  }, [item.id]);
+    const fetchVideoUrl = async () => {
+      const url = await getVideoUrl(`${item.videoUrl}`);
+
+      if (url) {
+        setVideoUrl(url);
+        console.log("Hello");
+        console.log(url);
+      }
+
+      setLoadingVideo(false);
+    };
+
+    if (isFocused) {
+      console.log("called");
+
+      fetchVideoUrl();
+
+      fetchExistingRating(item.id);
+
+      if (videoRef.current) {
+        videoRef.current.replayAsync().then(() => {
+          videoRef.current?.stopAsync();
+        });
+
+        if (videoUrl) {
+          videoRef.current?.loadAsync({ uri: videoUrl }).then(() => {});
+        }
+      }
+    }
+  }, [item.id, isFocused]);
 
   const handleRatingSave = async (videoId: string) => {
     try {
@@ -108,18 +140,26 @@ export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
       <Card.Content>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.subtitle}>UID: {item.creatorId}</Text>
-        <Video
-          ref={videoRef}
-          source={{
-            uri: item.videoUrl,
-          }}
-          rate={1.0}
-          volume={1.0}
-          isMuted={false}
-          shouldPlay
-          resizeMode="cover"
-          style={{ width: "100%", height: 600 }}
-        />
+
+        {/* 비디오 로딩 상태 처리 */}
+        {loadingVideo ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          videoUrl && (
+            <Video
+              ref={videoRef}
+              source={{
+                uri: videoUrl,
+              }}
+              rate={1.0}
+              volume={1.0}
+              isMuted={false}
+              resizeMode="cover"
+              style={{ width: "100%", height: 600 }}
+            />
+          )
+        )}
+
         <Button
           onPress={async () => {
             if (videoRef.current) {
@@ -163,7 +203,11 @@ export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
 
         {/* 디테일 페이지로 이동하는 버튼 */}
         <Button
-          onPress={() => router.push(`/video/${item.id}`)} // Expo Router 사용하여 디테일 페이지로 이동
+          onPress={() => {
+            router.push(`/video/${item.id}`);
+
+            videoRef.current?.stopAsync();
+          }} // Expo Router 사용하여 디테일 페이지로 이동
         >
           친구들 평가 보기
         </Button>

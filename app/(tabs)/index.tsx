@@ -9,8 +9,8 @@ import VideoCapture from "@/components/VideoCapture";
 import VideoListScreen from "@/components/VideoListScreen";
 
 export default function HomeScreen() {
-  return <VideoListScreen />;
-  // return <VideoCapture />;
+  // return <VideoListScreen />;
+  return <VideoCapture />;
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
