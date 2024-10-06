@@ -1,12 +1,12 @@
 import { VideoCard } from "@/components/VideoCard";
-import { db } from "@/lib/firebaseConfig";
+import { db } from "@/lib/firebaseConfig"; // Firebase 설정
 import { collection, getDocs } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function VideoList() {
+export default function VideoListScreen() {
   const [videos, setVideos] = useState<Array<any>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

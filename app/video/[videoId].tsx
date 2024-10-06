@@ -1,9 +1,10 @@
-import { db } from "@/lib/firebaseConfig";
-import { useLocalSearchParams } from "expo-router"; // Expo Router에서 전달된 params 사용
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Card } from "react-native-paper";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig"; // Firebase 설정 가져오기
+import { useLocalSearchParams } from "expo-router"; // Expo Router에서 전달된 params 사용
+import { getVideoUrl } from "@/lib/getVideoUrl";
 
 export default function RatingDetail() {
   const { videoId } = useLocalSearchParams(); // videoId를 받아옴
@@ -31,6 +32,9 @@ export default function RatingDetail() {
 
   useEffect(() => {
     fetchRatings(); // videoId가 변경될 때마다 데이터 로드
+    getVideoUrl("").then((D) => {
+      console.log(d);
+    });
   }, [videoId]);
 
   if (loading) {

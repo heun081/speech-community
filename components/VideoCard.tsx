@@ -6,6 +6,7 @@ import { Rating } from "react-native-ratings";
 import { db } from "@/lib/firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { Button, Card } from "react-native-paper";
+import { useRouter } from "expo-router"; // Expo Router 사용
 
 interface VideoCardProps {
   item: any;
@@ -13,6 +14,7 @@ interface VideoCardProps {
 
 export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
   const { user } = useAuth();
+  const router = useRouter(); // 라우터 훅 사용
 
   const [voiceSpeedRating, setVoiceSpeedRating] = useState<number>(3);
   const [postureRating, setPostureRating] = useState<number>(3);
@@ -158,6 +160,13 @@ export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
 
         {/* 평가 저장 버튼 */}
         <Button onPress={() => handleRatingSave(item.id)}>평가 저장</Button>
+
+        {/* 디테일 페이지로 이동하는 버튼 */}
+        <Button
+          onPress={() => router.push(`/video/${item.id}`)} // Expo Router 사용하여 디테일 페이지로 이동
+        >
+          친구들 평가 보기
+        </Button>
       </Card.Content>
     </Card>
   );
