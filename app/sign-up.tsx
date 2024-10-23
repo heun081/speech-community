@@ -16,7 +16,7 @@ export default function SignUp() {
   const handleSignUp = () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then(() => {
-        console.log("User signed up successfully");
+        console.log("사용자 회원가입 성공");
         setError(null);
       })
       .catch((error) => {
@@ -32,13 +32,17 @@ export default function SignUp() {
     }
   }, [user]);
 
+  const navigateToSignIn = () => {
+    router.push("/sign-in");
+  };
+
   return (
     <View style={styles.container}>
       <Text variant="headlineMedium" style={styles.title}>
-        Sign Up
+        회원가입
       </Text>
       <TextInput
-        label="Email"
+        label="이메일"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -47,7 +51,7 @@ export default function SignUp() {
         autoCapitalize="none"
       />
       <TextInput
-        label="Password"
+        label="비밀번호"
         value={password}
         onChangeText={setPassword}
         style={styles.input}
@@ -56,7 +60,14 @@ export default function SignUp() {
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
       <Button mode="contained" onPress={handleSignUp} style={styles.button}>
-        Sign Up
+        회원가입
+      </Button>
+      <Button
+        mode="text"
+        onPress={navigateToSignIn}
+        style={styles.signInButton}
+      >
+        이미 계정이 있으신가요? 로그인
       </Button>
     </View>
   );
@@ -77,6 +88,10 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 20,
+  },
+  signInButton: {
+    marginTop: 10,
+    textAlign: "center",
   },
   errorText: {
     color: "red",

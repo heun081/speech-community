@@ -31,13 +31,17 @@ export default function SignIn() {
     }
   }, [user]);
 
+  const navigateToSignUp = () => {
+    router.push("/sign-up");
+  };
+
   return (
     <View style={styles.container}>
       <Text variant="headlineMedium" style={styles.title}>
-        Sign In
+        로그인
       </Text>
       <TextInput
-        label="Email"
+        label="이메일"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -46,7 +50,7 @@ export default function SignIn() {
         autoCapitalize="none"
       />
       <TextInput
-        label="Password"
+        label="비밀번호"
         value={password}
         onChangeText={setPassword}
         style={styles.input}
@@ -55,7 +59,14 @@ export default function SignIn() {
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
       <Button mode="contained" onPress={handleSignIn} style={styles.button}>
-        Sign In
+        로그인
+      </Button>
+      <Button
+        mode="text"
+        onPress={navigateToSignUp}
+        style={styles.signUpButton}
+      >
+        계정이 없으신가요? 회원가입
       </Button>
     </View>
   );
@@ -76,6 +87,10 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 20,
+  },
+  signUpButton: {
+    marginTop: 10,
+    textAlign: "center",
   },
   errorText: {
     color: "red",
